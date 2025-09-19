@@ -330,7 +330,7 @@ async def entrypoint(ctx: agents.JobContext):
     )
 
     await session.generate_reply(
-        instructions="Greet the user and start gathering requirements for their custom voice AI agent."
+        instructions="Greet the user in English and start gathering requirements for their custom voice AI agent."
     )
     
     # Monitor for state changes and handle handoffs
