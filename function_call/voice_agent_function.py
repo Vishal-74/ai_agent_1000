@@ -9,15 +9,14 @@ import json
 import numpy as np
 from typing import Dict, List, Optional, Tuple
 from dotenv import load_dotenv
-import google.generativeai as genai
+import openai
 from rag_db_tool import PRODUCT_DATABASE, embed_text, load_index_and_mapping
 
 # -------------------------
 # Setup
 # -------------------------
 load_dotenv()
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY_1")
-genai.configure(api_key=GEMINI_API_KEY)
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
 # Load FAISS index
 try:
@@ -262,176 +261,60 @@ def function_call(user_query: str) -> Dict:
             else:
                 print(f"⚠️ No products match budget, showing all results")
         
-        # Step 4: Score products for exact vs similar matches
-        exact_matches = []
-        similar_matches = []
-        
+        # Step 4: Scoring candidates
+        scored_products = []
         for product in candidates:
             exact_score = calculate_exact_match_score(product, user_query, keywords)
             similarity_score = calculate_similarity_score(product, user_query, keywords)
-            
-            product_with_scores = {
-                **product,
-                "exact_score": exact_score,
-                "similarity_score": similarity_score,
-                "total_score": exact_score + similarity_score
+            total_score = max(exact_score, similarity_score)
+            scored_products.append((product, total_score))
+        
+        # Sort by score descending
+        scored_products.sort(key=lambda x: x[1], reverse=True)
+        
+        # Step 5: Determine if exact match (threshold can be tuned)
+        top_product, top_score = scored_products[0] if scored_products else (None, 0)
+        exact_match = top_score >= 70
+        
+        # Prepare response data
+        if exact_match:
+            response = {
+                "success": True,
+                "exact_match": True,
+                "product": top_product,
+                "message": f"Found exact match for '{user_query}'"
             }
-            
-            # Classify as exact match if high exact score
-            if exact_score >= 30:  # Lowered threshold for better detection
-                exact_matches.append(product_with_scores)
-            else:
-                similar_matches.append(product_with_scores)
-        
-        # Sort by scores
-        exact_matches.sort(key=lambda x: x['total_score'], reverse=True)
-        similar_matches.sort(key=lambda x: x['total_score'], reverse=True)
-        
-        # Debug output
-        print(f"🔍 Debug - Exact matches: {len(exact_matches)}, Similar: {len(similar_matches)}")
-        if exact_matches:
-            print(f"    Top exact: {exact_matches[0]['name']} (score: {exact_matches[0]['exact_score']:.1f})")
-        if similar_matches:
-            print(f"    Top similar: {similar_matches[0]['name']} (score: {similar_matches[0]['similarity_score']:.1f})")
-        
-        # Step 5: Determine response type and prepare results
-        if exact_matches:
-            # Found exact matches
-            match_type = "exact_match"
-            primary_products = exact_matches[:3]  # Top 3 exact matches
-            message = f"Found exact match for '{user_query}'"
-            
-            # Add some similar options if available
-            additional_products = similar_matches[:2] if similar_matches else []
-            
-        elif similar_matches:
-            # No exact matches, but found similar products
-            match_type = "similar_options" 
-            primary_products = similar_matches[:5]  # Top 5 similar
-            message = f"Found similar options for '{user_query}'"
-            additional_products = []
-            
         else:
-            # No matches found
-            return {
-                "success": False,
-                "error": f"No products found matching '{user_query}'",
-                "query": user_query,
-                "keywords_searched": keywords
+            # Return top 3 similar products
+            similar_products = [p for p, score in scored_products[:3]]
+            response = {
+                "success": True,
+                "exact_match": False,
+                "products": similar_products,
+                "message": f"No exact match found. Showing related products."
             }
         
-        # Step 6: Format response
-        def format_product(product):
-            return {
-                "id": product.get("id"),
-                "name": product.get("name"),
-                "price": product.get("price"),
-                "category": product.get("category"),
-                "description": product.get("description", "")[:200] + "..." if len(product.get("description", "")) > 200 else product.get("description", ""),
-                "features": product.get("features", [])[:5],  # Top 5 features
-                "rating": product.get("rating"),
-                "match_confidence": round(product.get("total_score", 0) / 10, 1)  # Normalized confidence score
-            }
-        
-        response = {
-            "success": True,
-            "query": user_query,
-            "keywords_searched": keywords,
-            "match_type": match_type,
-            "message": message,
-            "budget_applied": budget_range is not None,
-            "budget_range": budget_range,
-            "results": {
-                "primary_matches": [format_product(p) for p in primary_products],
-                "additional_options": [format_product(p) for p in additional_products] if additional_products else [],
-                "total_primary": len(primary_products),
-                "total_additional": len(additional_products)
-            }
-        }
-        
-        print(f"✅ Result: {match_type} - {len(primary_products)} primary matches")
         return response
-        
+    
     except Exception as e:
         return {
             "success": False,
-            "error": f"Function call failed: {str(e)}",
-            "query": user_query
+            "error": str(e)
         }
 
 # -------------------------
-# Testing Functions
+# For direct testing
 # -------------------------
-def test_query(query: str):
-    """Test a single query and display results"""
-    print(f"\n🧪 Testing: '{query}'")
-    print("=" * 50)
-    
-    result = function_call(query)
-    
-    if result["success"]:
-        print(f"✅ {result['message']}")
-        print(f"🎯 Match Type: {result['match_type']}")
-        
-        primary = result["results"]["primary_matches"]
-        additional = result["results"]["additional_options"]
-        
-        print(f"\n🏆 PRIMARY MATCHES ({len(primary)}):")
-        for i, product in enumerate(primary, 1):
-            print(f"  {i}. {product['name']}")
-            print(f"     💰 {product['price']} | ⭐ {product['rating']} | 🎯 {product['match_confidence']}")
-            print(f"     📝 {product['description']}")
-        
-        if additional:
-            print(f"\n🔗 SIMILAR OPTIONS ({len(additional)}):")
-            for i, product in enumerate(additional, 1):
-                print(f"  {i}. {product['name']} - {product['price']}")
-        
-        if result["budget_applied"]:
-            print(f"\n💰 Budget Filter: ${result['budget_range'][0]:.0f} - ${result['budget_range'][1]:.0f}")
-    
-    else:
-        print(f"❌ Error: {result['error']}")
-
-def run_comprehensive_tests():
-    """Run comprehensive tests"""
-    test_queries = [
-        # Exact product queries
-        "iPhone 15 Pro",
-        "Samsung Galaxy S24",
-        "MacBook Pro M3",
-        
-        # Category queries with budget
-        "wireless headphones under $200",
-        "gaming laptop under $1500",
-        "budget smartphone under $300",
-        
-        # Feature-based queries
-        "noise cancelling headphones",
-        "mechanical keyboard for gaming",
-        "bluetooth earbuds with long battery",
-        
-        # Generic queries
-        "headphones",
-        "laptop for work",
-        "phone with good camera"
+if __name__ == "__main__":
+    queries = [
+        "I want an iPhone 15 under $1000",
+        "Looking for wireless headphones above $200",
+        "Need a gaming laptop between $800 and $1500",
+        "Samsung Galaxy S22 below $900",
+        "Any cheap phone"
     ]
     
-    print("🧪 COMPREHENSIVE FUNCTION CALL TESTS")
-    print("=" * 80)
-    
-    for query in test_queries:
-        test_query(query)
-
-if __name__ == "__main__":
-    print("🤖 Enhanced Voice Agent Function Call Tool")
-    print("Database Search with Exact Match Detection")
-    print("=" * 60)
-    
-    # Quick test
-    # test_query("I want headphones under $200")
-    run_comprehensive_tests()
-    
-    print("\n" + "="*60)
-    print("🚀 For comprehensive testing, call: run_comprehensive_tests()")
-    print("🎯 Usage: result = function_call('user query here')")
+    for q in queries:
+        print("\n" + "="*40)
+        result = function_call(q)
+        print(json.dumps(result, indent=2))

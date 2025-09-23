@@ -309,44 +309,47 @@
         function displayResult(container, data, query, duration, isSuccess) {
             container.style.display = 'block';
             container.className = `result-container ${isSuccess ? 'success' : 'error'}`;
-            
+
             let html = `
                 <h4>Query: "${query}" ${isSuccess ? '✅' : '❌'}</h4>
                 <p><strong>Duration:</strong> ${duration}ms</p>
             `;
-            
+
             if (data.success) {
-                const results = data.results;
+                const primaryMatches = data?.results?.primary_matches || [];
+                const additionalOptions = data?.results?.additional_options || [];
+                const matchType = data?.match_type || "unknown";
+
                 html += `
-                    <p><strong>Match Type:</strong> ${data.match_type}</p>
-                    <p><strong>Primary Matches:</strong> ${results.primary_matches.length}</p>
-                    <p><strong>Additional Options:</strong> ${results.additional_options.length}</p>
-                    ${data.budget_applied ? `<p><strong>Budget:</strong> $${data.budget_range[0]} - $${data.budget_range[1]}</p>` : ''}
+                    <p><strong>Match Type:</strong> ${matchType}</p>
+                    <p><strong>Primary Matches:</strong> ${primaryMatches.length}</p>
+                    <p><strong>Additional Options:</strong> ${additionalOptions.length}</p>
+                    ${data.budget_applied ? `<p><strong>Budget:</strong> $${data.budget_range?.[0]} - $${data.budget_range?.[1]}</p>` : ''}
                     
                     <details style="margin-top: 10px;">
                         <summary>📋 View Full Response</summary>
                         <pre>${JSON.stringify(data, null, 2)}</pre>
                     </details>
                 `;
-                
-                if (results.primary_matches.length > 0) {
+
+                if (primaryMatches.length > 0) {
                     html += `
                         <details style="margin-top: 10px;">
-                            <summary>🏆 Top Result: ${results.primary_matches[0].name}</summary>
-                            <pre>${JSON.stringify(results.primary_matches[0], null, 2)}</pre>
+                            <summary>🏆 Top Result: ${primaryMatches[0].name}</summary>
+                            <pre>${JSON.stringify(primaryMatches[0], null, 2)}</pre>
                         </details>
                     `;
                 }
             } else {
                 html += `
-                    <p><strong>Error:</strong> ${data.error}</p>
+                    <p><strong>Error:</strong> ${data?.error || 'No error message provided'}</p>
                     <details>
                         <summary>📋 View Response</summary>
                         <pre>${JSON.stringify(data, null, 2)}</pre>
                     </details>
                 `;
             }
-            
+
             container.innerHTML = html;
         }
 
