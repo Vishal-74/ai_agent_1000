@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Agent API Test</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        .test-query {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            align-items: center;
+        }
+        .query-input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-family: monospace;
+        }
+        .test-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            min-width: 80px;
+        }
+        .test-btn:hover {
+            background: #0056b3;
+        }
+        .test-btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+        .result-container {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            margin-top: 10px;
+            display: none;
+        }
+        .success { border-color: #28a745; }
+        .error { border-color: #dc3545; }
+        pre {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 3px;
+            overflow-x: auto;
+            font-size: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .sample-queries {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        .sample-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+        .sample-card h3 {
+            margin: 0 0 10px 0;
+            color: #333;
+            font-size: 1.1rem;
+        }
+        .sample-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            width: 100%;
+        }
+        .sample-btn:hover {
+            background: #218838;
+        }
+        .api-info {
+            background: #e9ecef;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .status-online { background: #28a745; }
+        .status-offline { background: #dc3545; }
+        .loading {
+            display: none;
+            color: #666;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Voice Agent API Test Page</h1>
+        
+        <div class="api-info">
+            <h3>API Status: <span id="apiStatus"><span class="status-indicator status-offline"></span>Checking...</span></h3>
+            <p><strong>Endpoint:</strong> POST /search_products</p>
+            <p><strong>Base URL:</strong> <span id="baseUrl">http://localhost:5000</span></p>
+            <button onclick="checkApiHealth()" class="test-btn">🔄 Check Health</button>
+            <a href="/" class="test-btn" style="text-decoration: none; display: inline-block; text-align: center; margin-left: 10px;">🏠 Main Interface</a>
+        </div>
+
+        <div class="test-section">
+            <h2>📝 Quick Test Queries</h2>
+            <div class="sample-queries">
+                <div class="sample-card">
+                    <h3>🎯 Exact Product Match</h3>
+                    <p>"iPhone 15 Pro" - Should find exact product match</p>
+                    <button class="sample-btn" onclick="testQuery('iPhone 15 Pro')">Test Query</button>
+                </div>
+                <div class="sample-card">
+                    <h3>💰 Budget Search</h3>
+                    <p>"gaming laptop under $1500" - Budget filtering</p>
+                    <button class="sample-btn" onclick="testQuery('gaming laptop under $1500')">Test Query</button>
+                </div>
+                <div class="sample-card">
+                    <h3>🎧 Category Search</h3>
+                    <p>"wireless headphones under $200" - Category + budget</p>
+                    <button class="sample-btn" onclick="testQuery('wireless headphones under $200')">Test Query</button>
+                </div>
+                <div class="sample-card">
+                    <h3>📱 Brand Search</h3>
+                    <p>"Samsung Galaxy S24" - Brand + model</p>
+                    <button class="sample-btn" onclick="testQuery('Samsung Galaxy S24')">Test Query</button>
+                </div>
+                <div class="sample-card">
+                    <h3>💻 Work Laptop</h3>
+                    <p>"MacBook Pro M3" - Professional device</p>
+                    <button class="sample-btn" onclick="testQuery('MacBook Pro M3')">Test Query</button>
+                </div>
+                <div class="sample-card">
+                    <h3>🎮 Gaming Accessories</h3>
+                    <p>"mechanical keyboard for gaming" - Feature-based</p>
+                    <button class="sample-btn" onclick="testQuery('mechanical keyboard for gaming')">Test Query</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>🔧 Custom Query Test</h2>
+            <div class="test-query">
+                <input type="text" id="customQuery" class="query-input" placeholder="Enter your custom search query..." value="">
+                <button id="customTestBtn" class="test-btn" onclick="testCustomQuery()">Test</button>
+            </div>
+            <div id="customResult" class="result-container"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>📊 Batch Test Results</h2>
+            <button onclick="runBatchTests()" class="test-btn" style="margin-bottom: 15px;">🚀 Run All Tests</button>
+            <div id="batchResults"></div>
+        </div>
+    </div>
+
+    <script>
+        const baseUrl = window.location.origin;
+        document.getElementById('baseUrl').textContent = baseUrl;
+
+        // Check API health on page load
+        window.onload = function() {
+            checkApiHealth();
+        };
+
+        // Custom query test
+        document.getElementById('customQuery').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                testCustomQuery();
+            }
+        });
+
+        async function checkApiHealth() {
+            const statusEl = document.getElementById('apiStatus');
+            statusEl.innerHTML = '<span class="status-indicator status-offline"></span>Checking...';
+            
+            try {
+                const response = await fetch('/health');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    statusEl.innerHTML = '<span class="status-indicator status-online"></span>Online ✅';
+                } else {
+                    statusEl.innerHTML = '<span class="status-indicator status-offline"></span>Error ❌';
+                }
+            } catch (error) {
+                statusEl.innerHTML = '<span class="status-indicator status-offline"></span>Offline ❌';
+            }
+        }
+
+        async function testQuery(query) {
+            const resultContainer = createResultContainer(`test-result-${Date.now()}`);
+            document.querySelector('.sample-queries').appendChild(resultContainer);
+            
+            showLoading(resultContainer, `Testing: "${query}"`);
+            
+            try {
+                const startTime = Date.now();
+                const response = await fetch('/search_products', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ query: query })
+                });
+                
+                const data = await response.json();
+                const endTime = Date.now();
+                const duration = endTime - startTime;
+                
+                displayResult(resultContainer, data, query, duration, response.ok);
+                
+            } catch (error) {
+                displayError(resultContainer, error.message, query);
+            }
+        }
+
+        function testCustomQuery() {
+            const query = document.getElementById('customQuery').value.trim();
+            if (!query) {
+                alert('Please enter a query');
+                return;
+            }
+            
+            const resultContainer = document.getElementById('customResult');
+            testQueryInContainer(query, resultContainer);
+        }
+
+        async function testQueryInContainer(query, container) {
+            showLoading(container, `Testing: "${query}"`);
+            
+            try {
+                const startTime = Date.now();
+                const response = await fetch('/search_products', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ query: query })
+                });
+                
+                const data = await response.json();
+                const endTime = Date.now();
+                const duration = endTime - startTime;
+                
+                displayResult(container, data, query, duration, response.ok);
+                
+            } catch (error) {
+                displayError(container, error.message, query);
+            }
+        }
+
+        function createResultContainer(id) {
+            const container = document.createElement('div');
+            container.id = id;
+            container.className = 'result-container';
+            return container;
+        }
+
+        function showLoading(container, message) {
+            container.style.display = 'block';
+            container.className = 'result-container';
+            container.innerHTML = `
+                <div class="loading" style="display: block;">
+                    ⏳ ${message}
+                </div>
+            `;
+        }
+
+        function displayResult(container, data, query, duration, isSuccess) {
+            container.style.display = 'block';
+            container.className = `result-container ${isSuccess ? 'success' : 'error'}`;
+            
+            let html = `
+                <h4>Query: "${query}" ${isSuccess ? '✅' : '❌'}</h4>
+                <p><strong>Duration:</strong> ${duration}ms</p>
+            `;
+            
+            if (data.success) {
+                const results = data.results;
+                html += `
+                    <p><strong>Match Type:</strong> ${data.match_type}</p>
+                    <p><strong>Primary Matches:</strong> ${results.primary_matches.length}</p>
+                    <p><strong>Additional Options:</strong> ${results.additional_options.length}</p>
+                    ${data.budget_applied ? `<p><strong>Budget:</strong> $${data.budget_range[0]} - $${data.budget_range[1]}</p>` : ''}
+                    
+                    <details style="margin-top: 10px;">
+                        <summary>📋 View Full Response</summary>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    </details>
+                `;
+                
+                if (results.primary_matches.length > 0) {
+                    html += `
+                        <details style="margin-top: 10px;">
+                            <summary>🏆 Top Result: ${results.primary_matches[0].name}</summary>
+                            <pre>${JSON.stringify(results.primary_matches[0], null, 2)}</pre>
+                        </details>
+                    `;
+                }
+            } else {
+                html += `
+                    <p><strong>Error:</strong> ${data.error}</p>
+                    <details>
+                        <summary>📋 View Response</summary>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    </details>
+                `;
+            }
+            
+            container.innerHTML = html;
+        }
+
+        function displayError(container, error, query) {
+            container.style.display = 'block';
+            container.className = 'result-container error';
+            container.innerHTML = `
+                <h4>Query: "${query}" ❌</h4>
+                <p><strong>Network Error:</strong> ${error}</p>
+            `;
+        }
+
+        async function runBatchTests() {
+            const queries = [
+                'iPhone 15 Pro',
+                'gaming laptop under $1500',
+                'wireless headphones under $200',
+                'Samsung Galaxy S24',
+                'MacBook Pro M3',
+                'budget smartphone under $300',
+                'nonexistent product xyz123'
+            ];
+            
+            const batchContainer = document.getElementById('batchResults');
+            batchContainer.innerHTML = '<h3>Running batch tests...</h3>';
+            
+            let results = [];
+            let successCount = 0;
+            
+            for (let i = 0; i < queries.length; i++) {
+                const query = queries[i];
+                batchContainer.innerHTML += `<p>Testing ${i + 1}/${queries.length}: "${query}"...</p>`;
+                
+                try {
+                    const startTime = Date.now();
+                    const response = await fetch('/search_products', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ query: query })
+                    });
+                    
+                    const data = await response.json();
+                    const duration = Date.now() - startTime;
+                    
+                    if (data.success) {
+                        successCount++;
+                    }
+                    
+                    results.push({
+                        query,
+                        success: data.success,
+                        duration,
+                        matchType: data.match_type,
+                        primaryCount: data.results ? data.results.primary_matches.length : 0
+                    });
+                    
+                } catch (error) {
+                    results.push({
+                        query,
+                        success: false,
+                        error: error.message
+                    });
+                }
+                
+                // Small delay to prevent overwhelming the server
+                await new Promise(resolve => setTimeout(resolve, 100));
+            }
+            
+            // Display summary
+            let summaryHtml = `
+                <h3>📊 Batch Test Results</h3>
+                <p><strong>Success Rate:</strong> ${successCount}/${queries.length} (${Math.round(successCount/queries.length*100)}%)</p>
+                <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
+                    <thead>
+                        <tr style="background: #f8f9fa;">
+                            <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Query</th>
+                            <th style="border: 1px solid #ddd; padding: 8px;">Status</th>
+                            <th style="border: 1px solid #ddd; padding: 8px;">Duration</th>
+                            <th style="border: 1px solid #ddd; padding: 8px;">Match Type</th>
+                            <th style="border: 1px solid #ddd; padding: 8px;">Results</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            results.forEach(result => {
+                summaryHtml += `
+                    <tr>
+                        <td style="border: 1px solid #ddd; padding: 8px; font-family: monospace; font-size: 0.9rem;">${result.query}</td>
+                        <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${result.success ? '✅' : '❌'}</td>
+                        <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${result.duration || 'N/A'}ms</td>
+                        <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${result.matchType || 'N/A'}</td>
+                        <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${result.primaryCount || 0}</td>
+                    </tr>
+                `;
+            });
+            
+            summaryHtml += '</tbody></table>';
+            batchContainer.innerHTML = summaryHtml;
+        }
+    </script>
+</body>
+</html>

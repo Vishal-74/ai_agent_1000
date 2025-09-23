@@ -1,0 +1,110 @@
+[
+    {
+        "id": "1",
+        "name": "iPhone 15 Pro",
+        "category": "smartphone",
+        "price": "$999",
+        "description": "Latest iPhone with A17 Pro chip, titanium design, and advanced camera system with 3x telephoto lens",
+        "features": ["A17 Pro chip", "titanium build", "3x telephoto camera", "USB-C", "128GB storage"],
+        "rating": 4.8
+    },
+    {
+        "id": "2", 
+        "name": "Samsung Galaxy S24",
+        "category": "smartphone",
+        "price": "$799",
+        "description": "Premium Android smartphone with AI-powered features, excellent camera, and long battery life",
+        "features": ["Snapdragon 8 Gen 3", "50MP camera", "6.2 inch display", "Android 14", "8GB RAM"],
+        "rating": 4.7
+    },
+    {
+        "id": "3",
+        "name": "MacBook Pro M3",
+        "category": "laptop", 
+        "price": "$1599",
+        "description": "Professional laptop with M3 chip, stunning Liquid Retina XDR display, and all-day battery life",
+        "features": ["M3 chip", "14-inch display", "18-hour battery", "16GB RAM", "512GB SSD"],
+        "rating": 4.9
+    },
+    {
+        "id": "4",
+        "name": "Sony WH-1000XM4 Wireless Headphones",
+        "category": "audio",
+        "price": "$199",
+        "description": "Industry-leading noise canceling wireless headphones with 30-hour battery life",
+        "features": ["noise canceling", "30-hour battery", "wireless", "bluetooth", "touch controls"],
+        "rating": 4.8
+    },
+    {
+        "id": "5",
+        "name": "Apple AirPods Pro 2nd Gen",
+        "category": "audio",
+        "price": "$179", 
+        "description": "Premium wireless earbuds with active noise cancellation and spatial audio",
+        "features": ["active noise cancellation", "spatial audio", "wireless charging", "6-hour battery", "bluetooth"],
+        "rating": 4.7
+    },
+    {
+        "id": "6",
+        "name": "Gaming Laptop ASUS ROG Strix",
+        "category": "laptop",
+        "price": "$899",
+        "description": "High-performance gaming laptop with RTX 4060 graphics and fast 144Hz display",
+        "features": ["RTX 4060", "Intel i7", "144Hz display", "16GB RAM", "1TB SSD"],
+        "rating": 4.6
+    },
+    {
+        "id": "7",
+        "name": "Mechanical Gaming Keyboard",
+        "category": "accessory",
+        "price": "$129",
+        "description": "RGB mechanical keyboard with Cherry MX switches, perfect for gaming and typing",
+        "features": ["mechanical switches", "RGB lighting", "programmable keys", "gaming optimized", "USB-C"],
+        "rating": 4.5
+    },
+    {
+        "id": "8", 
+        "name": "Bluetooth Earbuds Budget",
+        "category": "audio",
+        "price": "$49",
+        "description": "Affordable wireless earbuds with good sound quality and decent battery life",
+        "features": ["bluetooth 5.0", "8-hour battery", "IPX4 waterproof", "touch controls", "charging case"],
+        "rating": 4.2
+    },
+    {
+        "id": "9",
+        "name": "Dell XPS 13 Laptop",
+        "category": "laptop", 
+        "price": "$1199",
+        "description": "Ultra-portable business laptop with premium build quality and excellent display",
+        "features": ["Intel i7", "13-inch display", "16GB RAM", "512GB SSD", "Windows 11"],
+        "rating": 4.6
+    },
+    {
+        "id": "10",
+        "name": "Google Pixel 8",
+        "category": "smartphone",
+        "price": "$599", 
+        "description": "Google's flagship phone with pure Android experience and exceptional camera AI",
+        "features": ["Tensor G3 chip", "50MP camera", "Android 14", "7 years updates", "6.2 inch display"],
+        "rating": 4.5
+    },
+    {
+        "id": "11",
+        "name": "Samsung Galaxy Buds Pro",
+        "category": "audio",
+        "price": "$149",
+        "description": "Premium wireless earbuds with 360 audio and intelligent active noise canceling",
+        "features": ["active noise canceling", "360 audio", "wireless charging", "8-hour battery", "water resistant"],
+        "rating": 4.4
+    },
+    {
+        "id": "12",
+        "name": "Logitech MX Master 3 Mouse",
+        "category": "accessory", 
+        "price": "$99",
+        "description": "Professional wireless mouse with precision tracking and customizable buttons",
+        "features": ["wireless", "precision scroll", "customizable buttons", "70-day battery", "multi-device"],
+        "rating": 4.7
+    }
+]

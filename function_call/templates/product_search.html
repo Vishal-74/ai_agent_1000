@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Agent Product Search</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .search-container {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .search-box {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 15px 20px;
+            font-size: 1.1rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 50px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .search-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.1rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 10px 5px;
+        }
+
+        .search-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .search-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .quick-searches {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .quick-search-btn {
+            background: #f8f9fa;
+            border: 1px solid #e0e0e0;
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+        }
+
+        .quick-search-btn:hover {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .results-container {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            display: none;
+        }
+
+        .results-header {
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .results-title {
+            font-size: 1.5rem;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .results-meta {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .match-type-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-left: 10px;
+        }
+
+        .exact-match {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .similar-options {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .product-card {
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+        }
+
+        .product-card.primary {
+            border-color: #667eea;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+        }
+
+        .product-name {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .product-price {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .product-category {
+            display: inline-block;
+            background: #f8f9fa;
+            color: #666;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+        }
+
+        .product-description {
+            color: #666;
+            line-height: 1.4;
+            margin-bottom: 15px;
+        }
+
+        .product-features {
+            margin-bottom: 15px;
+        }
+
+        .feature-tag {
+            display: inline-block;
+            background: #e9ecef;
+            color: #495057;
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            margin: 2px 4px 2px 0;
+        }
+
+        .product-rating {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .stars {
+            color: #ffc107;
+            font-size: 1.1rem;
+        }
+
+        .confidence-score {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: #667eea;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .additional-options {
+            margin-top: 40px;
+        }
+
+        .section-title {
+            font-size: 1.3rem;
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .budget-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            padding: 12px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .search-container {
+                padding: 20px;
+            }
+            
+            .products-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎙️ Voice Agent Product Search</h1>
+            <p>Find products using natural language queries</p>
+        </div>
+
+        <div class="search-container">
+            <div class="search-box">
+                <input 
+                    type="text" 
+                    id="searchInput" 
+                    class="search-input" 
+                    placeholder="Try: 'iPhone 15 Pro', 'gaming laptop under $1500', 'wireless headphones under $200'"
+                    autocomplete="off"
+                >
+                <div style="text-align: center; margin-top: 15px;">
+                    <button id="searchButton" class="search-button">🔍 Search Products</button>
+                    <button id="clearButton" class="search-button" style="background: #6c757d;">🗑️ Clear</button>
+                </div>
+            </div>
+
+            <div class="quick-searches">
+                <span style="color: #666; margin-right: 10px;">Quick searches:</span>
+                <button class="quick-search-btn" onclick="quickSearch('iPhone 15 Pro')">iPhone 15 Pro</button>
+                <button class="quick-search-btn" onclick="quickSearch('gaming laptop under $1500')">Gaming Laptop < $1500</button>
+                <button class="quick-search-btn" onclick="quickSearch('wireless headphones under $200')">Headphones < $200</button>
+                <button class="quick-search-btn" onclick="quickSearch('Samsung Galaxy S24')">Galaxy S24</button>
+                <button class="quick-search-btn" onclick="quickSearch('MacBook Pro M3')">MacBook Pro M3</button>
+            </div>
+        </div>
+
+        <div id="loadingContainer" class="loading" style="display: none;">
+            <div class="spinner"></div>
+            <p>Searching products...</p>
+        </div>
+
+        <div id="resultsContainer" class="results-container">
+            <!-- Results will be populated here -->
+        </div>
+    </div>
+
+    <script>
+        let currentQuery = '';
+        
+        // DOM elements
+        const searchInput = document.getElementById('searchInput');
+        const searchButton = document.getElementById('searchButton');
+        const clearButton = document.getElementById('clearButton');
+        const loadingContainer = document.getElementById('loadingContainer');
+        const resultsContainer = document.getElementById('resultsContainer');
+
+        // Event listeners
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                performSearch();
+            }
+        });
+
+        searchInput.addEventListener('input', function() {
+            if (this.value.length > 0) {
+                searchButton.textContent = '🔍 Search Products';
+            } else {
+                searchButton.textContent = '🔍 Search Products';
+            }
+        });
+
+        searchButton.addEventListener('click', performSearch);
+        clearButton.addEventListener('click', clearSearch);
+
+        // Quick search function
+        function quickSearch(query) {
+            searchInput.value = query;
+            performSearch();
+        }
+
+        // Clear search
+        function clearSearch() {
+            searchInput.value = '';
+            resultsContainer.style.display = 'none';
+            currentQuery = '';
+        }
+
+        // Main search function
+        async function performSearch() {
+            const query = searchInput.value.trim();
+            
+            if (!query) {
+                alert('Please enter a search query');
+                return;
+            }
+
+            if (query === currentQuery && resultsContainer.style.display === 'block') {
+                // Same query, don't search again
+                return;
+            }
+
+            currentQuery = query;
+            
+            // Show loading
+            showLoading(true);
+            hideResults();
+
+            try {
+                const response = await fetch('/search_products', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ query: query })
+                });
+
+                const data = await response.json();
+                
+                // Hide loading
+                showLoading(false);
+                
+                if (data.success) {
+                    displayResults(data);
+                } else {
+                    displayError(data.error || 'Search failed');
+                }
+
+            } catch (error) {
+                console.error('Search error:', error);
+                showLoading(false);
+                displayError('Network error. Please check your connection and try again.');
+            }
+        }
+
+        // Show/hide loading
+        function showLoading(show) {
+            loadingContainer.style.display = show ? 'block' : 'none';
+            searchButton.disabled = show;
+            
+            if (show) {
+                searchButton.textContent = '⏳ Searching...';
+            } else {
+                searchButton.textContent = '🔍 Search Products';
+                searchButton.disabled = false;
+            }
+        }
+
+        // Hide results
+        function hideResults() {
+            resultsContainer.style.display = 'none';
+        }
+
+        // Display search results
+        function displayResults(data) {
+            const results = data.results;
+            const primaryMatches = results.primary_matches || [];
+            const additionalOptions = results.additional_options || [];
+
+            let html = `
+                <div class="results-header">
+                    <h2 class="results-title">
+                        Search Results for "${data.query}"
+                        <span class="match-type-badge ${data.match_type.replace('_', '-')}">${data.match_type.replace('_', ' ')}</span>
+                    </h2>
+                    <div class="results-meta">
+                        Found ${primaryMatches.length} primary matches
+                        ${additionalOptions.length > 0 ? ` and ${additionalOptions.length} similar options` : ''}
+                        ${data.budget_applied ? ` • Budget filter applied: $${data.budget_range[0]} - $${data.budget_range[1]}` : ''}
+                    </div>
+                </div>
+            `;
+
+            if (data.budget_applied) {
+                html += `
+                    <div class="budget-info">
+                        💰 Budget Filter Applied: $${data.budget_range[0]} - $${data.budget_range[1]}
+                    </div>
+                `;
+            }
+
+            if (primaryMatches.length > 0) {
+                html += `
+                    <div class="products-grid">
+                        ${primaryMatches.map(product => renderProductCard(product, true)).join('')}
+                    </div>
+                `;
+            }
+
+            if (additionalOptions.length > 0) {
+                html += `
+                    <div class="additional-options">
+                        <h3 class="section-title">🔗 Similar Options</h3>
+                        <div class="products-grid">
+                            ${additionalOptions.map(product => renderProductCard(product, false)).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+
+            resultsContainer.innerHTML = html;
+            resultsContainer.style.display = 'block';
+
+            // Smooth scroll to results
+            resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        // Render product card
+        function renderProductCard(product, isPrimary) {
+            const stars = '★'.repeat(Math.floor(product.rating)) + '☆'.repeat(5 - Math.floor(product.rating));
+            const features = product.features || [];
+            
+            return `
+                <div class="product-card ${isPrimary ? 'primary' : ''}">
+                    <div class="confidence-score">${product.match_confidence}/10</div>
+                    <h3 class="product-name">${product.name}</h3>
+                    <div class="product-price">${product.price}</div>
+                    <div class="product-category">${product.category}</div>
+                    <div class="product-rating">
+                        <span class="stars">${stars}</span>
+                        <span>${product.rating}/5</span>
+                    </div>
+                    <div class="product-description">${product.description}</div>
+                    ${features.length > 0 ? `
+                        <div class="product-features">
+                            ${features.slice(0, 5).map(feature => `<span class="feature-tag">${feature}</span>`).join('')}
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+
+        // Display error message
+        function displayError(message) {
+            const html = `
+                <div class="error-message">
+                    <h3>😔 No Results Found</h3>
+                    <p>${message}</p>
+                    <p style="margin-top: 10px; font-size: 0.9rem;">
+                        Try searching for: "iPhone 15 Pro", "gaming laptop under $1500", or "wireless headphones"
+                    </p>
+                </div>
+            `;
+            
+            resultsContainer.innerHTML = html;
+            resultsContainer.style.display = 'block';
+        }
+
+        // Auto-focus on search input
+        searchInput.focus();
+
+        // Add some sample searches on page load
+        console.log('Voice Agent Product Search Interface Loaded');
+        console.log('Try these sample queries:');
+        console.log('- iPhone 15 Pro');
+        console.log('- gaming laptop under $1500'); 
+        console.log('- wireless headphones under $200');
+        console.log('- Samsung Galaxy S24');
+    </script>
+</body>
+</html>
